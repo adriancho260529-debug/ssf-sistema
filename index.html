@@ -3457,9 +3457,9 @@ function finishQuiz(tema) {
     finalEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  if (passed) markDone(tema);
-  if (passed) markDone(tema);
+    if (passed) markDone(tema);
   autoSaveProgreso(tema, {
+
     quiz_score: correct,
     quiz_aprobado: passed,
     modulo_completado: passed
@@ -3513,8 +3513,7 @@ function retryQuiz(tema) {
 // ─────────────────────────────────────────────
 // !! CONFIGURACIÓN — EDITAR ESTOS DOS VALORES !!
 // ─────────────────────────────────────────────
-const API_URL    = 'const API_URL    = 'https://ssf-api.adriancho260529.workers.dev';
-; // ← pega tu URL de Cloudflare
+const API_URL    = 'const API_URL    = 'https://ssf-api.adriancho260529.workers.dev'; ← pega tu URL de Cloudflare
 const ADMIN_EMAIL = 'adriancho260529@gmail.com';                      // ← tu correo de administrador
 
 // ─────────────────────────────────────────────
@@ -3565,7 +3564,7 @@ function onLoggedIn() {
   if (cargoEl) cargoEl.textContent = currentUser.cargo;
 
   // Show admin tab only for admin
-  if (currentUser.email === ADMIN_EMAIL) {
+  if (currentUser.cargo === 'admin') {
     const adminBtn = document.getElementById('tab-admin-btn');
     if (adminBtn) adminBtn.style.display = 'flex';
   }
@@ -3798,7 +3797,10 @@ async function addUser() {
   msg.style.color = 'var(--green)';
   document.getElementById('new-nombre').value = '';
   document.getElementById('new-email').value = '';
-  async function saveEvaluacion() {
+  loadAdminDashboard();
+}
+
+async function saveEvaluacion() {
   if (!currentUser) { alert('Debe iniciar sesión'); return; }
   const periodo = document.getElementById('periodo')?.value || '';
   const tipoEval = document.getElementById('tipo-eval')?.value || '';
@@ -3818,8 +3820,6 @@ async function addUser() {
   if (data.error) { alert('Error al guardar: ' + data.error); }
   else { alert('✅ Evaluación guardada correctamente'); }
 }
-loadAdminDashboard();
-}
 
 // ─────────────────────────────────────────────
 // INIT — check session on load
@@ -3829,4 +3829,5 @@ window.addEventListener('load', () => {
 });
 </script>
 </body>
+ </html>
 </html>
