@@ -134,6 +134,7 @@ fetch(API+"/auth/verify-otp",{method:"POST",headers:{"Content-Type":"application
 .then(function(d){
 if(d.error)throw new Error(d.error);
 localStorage.setItem("ssf_token",d.token);
+token=d.token;
 showApp(d.user);
 })
 .catch(function(e){err.textContent=e.message;err.classList.remove("hidden")})
