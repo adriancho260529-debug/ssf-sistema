@@ -168,9 +168,40 @@ if(tab==="estadisticas")loadEstadisticas();
 
 function loadModulos(){
 fetch(API+"/modulos",{headers:{Authorization:"Bearer "+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+modulosData=d.modulos;
+var list=document.getElementById("modulos-list");
+var html="";
+d.modulos.forEach(function(m){
+var badge=m.tipo==="Formación"?"<span class='badge badge-formacion'>Formación</span>":"<span class='badge badge-protocolo'>Protocolo</span>";
+html+="<div class='mod-item' onclick='verContenido(\""+m.id+"\")'>"+badge+" "+m.titulo+"</div>";
+});
+list.innerHTML=html;
+});
+}
 
 function verContenido(id){
 fetch(API+"/modulo/contenido?id="+id,{headers:{Authorization:"Bearer "+token}})
+.then(function(r){return r.json()})
+.then(function(d){
+if(d.error){alert(d.error);return;}
+var m=d.modulo;
+var html="<div class='card'><h2>"+m.titulo+"</h2>";
+html+="<p style='color:#94a3b8;margin-bottom:16px'>Tipo: "+m.tipo+"</p>";
+html+="<h3 style='color:#38bdf8;margin-bottom:12px'>Contenido Teórico</h3>";
+m.contenido.forEach(function(s){
+html+="<div class='subtema'><h4>"+s.subtema+"</h4><p>"+s.texto+"</p></div>";
+});
+html+="<button onclick='iniciarQuiz(\""+id+"\")' class='btn-success' style='margin-top:16px'>Tomar Evaluación</button>";
+html+="<button onclick='crearSesion(\""+id+"\")' class='btn-sm' style='margin-top:16px;margin-left:8px'>+ Nueva Sesión</button>";
+html+="<div id='sesiones-container' style='margin-top:24px'></div>";
+html+="</div>";
+document.getElementById("modulo-detalle").innerHTML=html;
+loadSesiones(id);
+})
+.catch(function(e){alert(e.message)});
+}
 
 function iniciarQuiz(id){
 fetch(API+"/evaluacion?id="+id,{headers:{Authorization:"Bearer "+token}})
@@ -196,7 +227,7 @@ document.getElementById("modulo-detalle").innerHTML=html;
 
 function selectAnswer(pid,opt){
 quizAnswers[pid]=opt;
-for(var j=0;j<15;j++){
+for(var j=0;j<20;j++){
 var el=document.getElementById("opt-"+pid+"-"+j);
 if(el)el.classList.remove("selected");
 }
@@ -399,6 +430,7 @@ html+="<div class='stat-card'><div class='value'>"+d.totalQuizzes+"</div><div cl
 html+="<div class='stat-card'><div class='value'>"+d.quizzesAprobados+"</div><div class='label'>Evaluaciones Aprobadas</div></div>";
 html+="<div class='stat-card'><div class='value'>"+d.modulosCompletados+"</div><div class='label'>Módulos Completados</div></div>";
 html+="</div>";
+
 html+="<div class='card'><h2>Progreso por Usuario</h2>";
 if(!d.progresoUsuarios||d.progresoUsuarios.length===0){
 html+="<p style='color:#64748b'>Sin datos de progreso.</p>";
@@ -410,6 +442,7 @@ html+="<tr><td>"+(u.email||"-")+"</td><td>"+(u.nombre||"-")+"</td><td>"+(u.cargo
 html+="</tbody></table>";
 }
 html+="</div>";
+
 html+="<div class='card'><h2>Estadísticas por Módulo</h2>";
 if(!d.moduloStats||d.moduloStats.length===0){
 html+="<p style='color:#64748b'>Sin datos por módulo.</p>";
@@ -421,7 +454,9 @@ html+="<tr><td>"+(m.tema||"-")+"</td><td>"+m.usuarios_iniciados+"</td><td>"+m.ap
 html+="</tbody></table>";
 }
 html+="</div>";
+
 html+="<div class='card'><h2>Estadísticas de Desempeño</h2><div id='stats-desempeno'><p style='color:#94a3b8'>Cargando...</p></div></div>";
+
 html+="<div class='card'><h2>Acciones Administrativas</h2>";
 html+="<div style='display:flex;gap:12px;flex-wrap:wrap'>";
 html+="<button onclick='resetProgreso()' class='btn-danger'>Reiniciar Todo el Progreso</button>";
@@ -429,6 +464,7 @@ html+="<button onclick='resetEvalDesempeno()' class='btn-danger'>Reiniciar Evalu
 html+="</div></div>";
 
 html+="<div class='card'><h2>Gestión de Módulos</h2><p style='color:#94a3b8;margin-bottom:16px'>Activa o desactiva los módulos que los usuarios pueden ver. Los módulos desactivados no serán visibles para los usuarios.</p><div id='gestion-modulos'><p style='color:#94a3b8'>Cargando...</p></div></div>";
+
 cont.innerHTML=html;
 loadStatsDesempeno();
 loadGestionModulos();
@@ -451,15 +487,15 @@ html+="<div class='stat-card'><div class='value'>"+(d.promedioGeneral?d.promedio
 html+="</div>";
 html+="<h3 style='color:#38bdf8;margin:16px 0 8px'>Por Miembro</h3>";
 if(d.porMiembro&&d.porMiembro.length>0){
-html+="<table><thead><tr><th>Nombre</th><th>Cargo</th><th>Total Evaluaciones</th><th>Prom. Puntualidad</th><th>Prom. Presentación</th><th>Prom. Conocimiento</th><th>Prom. Actitud</th><th>Prom. Trabajo Equipo</th><th>Promedio General</th></tr></thead><tbody>";
+html+="<table><thead><tr><th>Nombre</th><th>Cargo</th><th>Total</th><th>Punt.</th><th>Pres.</th><th>Conoc.</th><th>Act.</th><th>Equipo</th><th>Promedio</th></tr></thead><tbody>";
 d.porMiembro.forEach(function(m){
 html+="<tr><td>"+(m.nombre||"-")+"</td><td>"+(m.cargo||"-")+"</td><td>"+m.total_eval+"</td><td>"+(m.avg_puntualidad?m.avg_puntualidad.toFixed(1):0)+"</td><td>"+(m.avg_presentacion?m.avg_presentacion.toFixed(1):0)+"</td><td>"+(m.avg_conocimiento?m.avg_conocimiento.toFixed(1):0)+"</td><td>"+(m.avg_actitud?m.avg_actitud.toFixed(1):0)+"</td><td>"+(m.avg_trabajo_equipo?m.avg_trabajo_equipo.toFixed(1):0)+"</td><td><strong>"+(m.promedio_general?m.promedio_general.toFixed(1):0)+"</strong></td></tr>";
 });
 html+="</tbody></table>";
-}else{html+="<p style='color:#64748b'>Sin evaluaciones de desempeño registradas.</p>";}
+}else{html+="<p style='color:#64748b'>Sin evaluaciones registradas.</p>";}
 html+="<h3 style='color:#38bdf8;margin:16px 0 8px'>Por Período</h3>";
 if(d.porPeriodo&&d.porPeriodo.length>0){
-html+="<table><thead><tr><th>Período</th><th>Total Evaluaciones</th><th>Prom. Puntualidad</th><th>Prom. Presentación</th><th>Prom. Conocimiento</th><th>Prom. Actitud</th><th>Prom. Trabajo Equipo</th><th>Promedio General</th></tr></thead><tbody>";
+html+="<table><thead><tr><th>Período</th><th>Total</th><th>Punt.</th><th>Pres.</th><th>Conoc.</th><th>Act.</th><th>Equipo</th><th>Promedio</th></tr></thead><tbody>";
 d.porPeriodo.forEach(function(p){
 html+="<tr><td>"+(p.periodo||"-")+"</td><td>"+p.total_eval+"</td><td>"+(p.avg_puntualidad?p.avg_puntualidad.toFixed(1):0)+"</td><td>"+(p.avg_presentacion?p.avg_presentacion.toFixed(1):0)+"</td><td>"+(p.avg_conocimiento?p.avg_conocimiento.toFixed(1):0)+"</td><td>"+(p.avg_actitud?p.avg_actitud.toFixed(1):0)+"</td><td>"+(p.avg_trabajo_equipo?p.avg_trabajo_equipo.toFixed(1):0)+"</td><td><strong>"+(p.promedio_general?p.promedio_general.toFixed(1):0)+"</strong></td></tr>";
 });
@@ -485,6 +521,7 @@ fetch(API+"/admin/reset-eval-desempeno",{method:"POST",headers:{Authorization:"B
 .then(function(d){if(d.success){alert(d.message);loadEstadisticas();}else alert(d.error)})
 .catch(function(e){alert(e.message)});
 }
+
 function loadGestionModulos(){
 fetch(API+"/admin/modulos",{headers:{Authorization:"Bearer "+token}})
 .then(function(r){return r.json()})
